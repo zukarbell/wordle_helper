@@ -8,7 +8,7 @@ class WordleBrain:
         self.all_words = list_all_words
         self.grey_letters = set()
         self.cur_word = [None, None, None, None, None]
-        self.yellow_letters = set()
+        self.yellow_letters = {}
 
     def input_letter_green(self, given_str):
         # 0 - letter, 1- location
@@ -18,9 +18,15 @@ class WordleBrain:
         for char in iter_of_grey:
             self.grey_letters.add(char)
 
-    def input_letters_yellow(self, yellow_iter):
-        for char in yellow_iter:
-            self.yellow_letters.add(char)
+    def input_letters_yellow(self, yellows_lst: list[str]):
+        # 0 - letter, 1- location
+        for element in yellows_lst:
+            letter = element[0]
+            location = element[1]
+            if letter not in self.yellow_letters:
+                self.yellow_letters[letter] = []
+
+            self.yellow_letters[letter].append(int(location) - 1)
 
     def filter(self):
         filter_green = WordleBrain.bool_green(self.cur_word)
@@ -78,16 +84,20 @@ class WordleBrain:
         return inner
 
     @staticmethod
-    def bool_yellow(set_of_yellow):
+    def bool_yellow(dict_of_yellow):
         """
         check if a given set of yellow letters is in the word
-        :param set_of_yellow: set of all the yellow chars
+        :param dict_of_yellow: set of all the yellow chars
         :return: False - if one of the letters is not in the given word, True - if all the letters are in the word
         """
         def inner(word_from_bank):
-            for letter in set_of_yellow:
+            for letter in dict_of_yellow:
                 if letter not in word_from_bank:
                     return False
+                lst_loc = dict_of_yellow[letter]
+                for loc in lst_loc:
+                    if word_from_bank[loc] == letter:
+                        return False
             return True
 
         return inner
@@ -99,12 +109,12 @@ def input_green():
     while not_finished:
         cur_input = input("Please enter a green letter and it's location (between 1-5).\n"
           "After finishing, or if you don't have words, type in !\n")
-        if cur_input and cur_input != "!" and check_single_green(cur_input):
+        if cur_input and cur_input != "!" and check_single_letter_input(cur_input):
             list_input.append(cur_input)
         elif cur_input == "!" or len(list_input) == 5:
             print("great, you've finished the input\n\n")
             not_finished = False
-        elif not check_single_green(cur_input):
+        elif not check_single_letter_input(cur_input):
             print("that's not a legal input, do a correct one")
         elif cur_input is None:
             print("you haven't typed anything, if finished type !")
@@ -113,7 +123,27 @@ def input_green():
     return list_input
 
 
-def check_single_green(in_str):
+def input_yellow():
+    not_finished = True
+    list_input = []
+    while not_finished:
+        cur_input = input("Please enter a yellow letter and it's location (between 1-5).\n"
+          "After finishing, or if you don't have any yellows, type in !\n")
+        if cur_input and cur_input != "!" and check_single_letter_input(cur_input):
+            list_input.append(cur_input)
+        elif cur_input == "!" or len(list_input) == 5:
+            print("great, you've finished the input\n\n")
+            not_finished = False
+        elif not check_single_letter_input(cur_input):
+            print("that's not a legal input, do a correct one")
+        elif cur_input is None:
+            print("you haven't typed anything, if finished type !")
+
+    os.system('cls')
+    return list_input
+
+
+def check_single_letter_input(in_str):
     if len(in_str) == 2:
         letter: str = in_str[:1]
         location: str = in_str[1:]
@@ -174,9 +204,10 @@ if __name__ == '__main__':
     not_finished = True
     while not_finished:
         grey_set = input_grey_set()
-        yel_set = input_yellow_set()
+        yel_lst = input_yellow()
+        # print("here", type(yel_lst), yel_lst) remove
         the_helper.input_letter_grey(grey_set)
-        the_helper.input_letters_yellow(yel_set)
+        the_helper.input_letters_yellow(yel_lst)
         # if not grey_set:
         #     break
 
